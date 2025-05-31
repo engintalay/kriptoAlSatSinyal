@@ -6,6 +6,7 @@ This project generates trading signals for multiple cryptocurrencies using techn
 ## Files
 - **sinyalUretici.py**: Main logic for fetching market data, calculating indicators, and generating trading signals for multiple coins. Uses `ayarlar.json` for interval/timeframe.
 - **yakinda_al_sinyali.py**: Shows the last 24 candles' indicator values and signals for all coins in a tabbed GUI, with candlestick charts, Bollinger Bands/MA20, coin pair management, and interval settings. The window title displays the number of rows for each coin.
+    - **YENİ:** Coin çiftlerini yönet ekranına, KuCoin'den popüler USDT coinlerini doğrudan ekleyebileceğiniz bir arayüz eklendi. Artık coin ekleme işlemini uygulama içinden kolayca yapabilirsiniz.
 - **kucoin_populer_usdt_ekle.py**: Adds the most popular USDT pairs from KuCoin to `coinler.txt`. You can choose to append only new coins or completely reset the list.
 - **requirements.txt**: Lists the necessary Python libraries for the project.
 - **install.sh**: Shell script to automate installation on Linux/macOS.
@@ -56,6 +57,7 @@ python yakinda_al_sinyali.py
 - Menüden "Verileri Yenile" ile verileri güncelleyebilirsiniz.
 - Menüden "Hakkında" ile uygulama ve geliştirici hakkında bilgi alabilirsiniz.
 - Uygulama başlığında her coin için tabloya eklenen mum sayısı gösterilir.
+- **YENİ:** "Ayarlar > Coin Çiftlerini Yönet" ekranında, "KuCoin'den Popüler USDT Coin Ekle" bölümü ile popüler coinleri doğrudan ekleyebilirsiniz.
 
 ### KuCoin'den En Popüler USDT Coinlerini coinler.txt'ye Ekle:
 ```sh
