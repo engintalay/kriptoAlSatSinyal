@@ -127,14 +127,33 @@ def manage_coins_window(parent, symbols, update_callback):
     tk.Button(btn_frame, text="Kaydet ve Kapat", command=save_and_close).pack(side='left', padx=5)
     tk.Button(btn_frame, text="Vazgeç", command=win.destroy).pack(side='left', padx=5)
 
+def show_about_window(parent):
+    about = tk.Toplevel(parent)
+    about.title("Hakkında")
+    about.geometry("350x180")
+    about.resizable(False, False)
+    msg = (
+        "kriptoAlSatSinyal v1.0\n\n"
+        "Kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.\n"
+        "Geliştirici: Engin Talay\n"
+        "Lisans: MIT\n"
+        "github.com/engintalay/kriptoAlSatSinyal\n\n"
+    )
+    tk.Label(about, text=msg, justify="left", padx=10, pady=10).pack()
+    tk.Button(about, text="Kapat", command=about.destroy).pack(pady=10)
+
 def show_tables_in_tabs(symbols):
     root = tk.Tk()
-    root.title("Kripto Son 5 Mum Sinyalleri")
+    root.title("Kripto Son 5 Mum Sinyalleri v1.0")
 
     # Menü çubuğu ve coin yönetim ekranı
     def reload_and_refresh(new_symbols=None):
         root.destroy()
-        # Uygulamayı yeniden başlat
+        import sys, os
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+    def refresh_data():
+        root.destroy()
         import sys, os
         os.execl(sys.executable, sys.executable, *sys.argv)
 
@@ -142,6 +161,8 @@ def show_tables_in_tabs(symbols):
     coin_menu = tk.Menu(menubar, tearoff=0)
     coin_menu.add_command(label="Coin Çiftlerini Yönet", command=lambda: manage_coins_window(root, symbols, reload_and_refresh))
     menubar.add_cascade(label="Ayarlar", menu=coin_menu)
+    menubar.add_command(label="Verileri Yenile", command=refresh_data)
+    menubar.add_command(label="Hakkında", command=lambda: show_about_window(root))
     root.config(menu=menubar)
 
     # Progress bar ekle

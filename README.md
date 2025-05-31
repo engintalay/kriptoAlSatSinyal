@@ -1,4 +1,4 @@
-# kriptoAlSatSinyal
+# kriptoAlSatSinyal v1.0
 
 ## Overview
 This project generates trading signals for multiple cryptocurrencies using technical indicators such as RSI, MACD, and SuperTrend. It supports both command-line and graphical (tabbed) viewing of recent signals and candlestick data. You can also manage the list of coin pairs from within the graphical application.
@@ -48,6 +48,8 @@ python yakinda_al_sinyali.py
 - Her sekmede ayrıca son 24 mum için candlestick grafik ve Bollinger Bantları/MA20 (düğme ile açılıp kapatılabilir) yer alır.
 - Yükleme sırasında ilerleme çubuğu gösterilir.
 - Menüden "Ayarlar > Coin Çiftlerini Yönet" ile coinler.txt dosyasını uygulama içinden düzenleyebilirsiniz.
+- Menüden "Verileri Yenile" ile verileri güncelleyebilirsiniz.
+- Menüden "Hakkında" ile uygulama ve geliştirici hakkında bilgi alabilirsiniz.
 
 ## Ekran Görüntüsü
 
@@ -66,3 +68,9 @@ SOL-USDT
 - Tüm coin çiftleri KuCoin borsasında desteklenmelidir.
 - `requirements.txt` dosyasındaki tüm paketler kurulmalıdır.
 - Grafiksel arayüz için `tkinter` ve `matplotlib` gereklidir.
+
+## Hakkında
+Bu uygulama, kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.  
+Geliştirici: [Adınızı buraya yazın]  
+Sürüm: v1.0  
+Lisans: MIT
