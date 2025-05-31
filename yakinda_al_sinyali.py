@@ -236,6 +236,7 @@ def show_tables_in_tabs(symbols):
     style.map("Treeview", background=[('selected', '#ececec')])
 
     total = len(symbols)
+    tablo_mum_sayisi = 24  # Varsayılan tablo mum sayısı
     for idx, symbol in enumerate(symbols, 1):
         frame = ttk.Frame(notebook)
         notebook.add(frame, text=symbol)
@@ -243,6 +244,7 @@ def show_tables_in_tabs(symbols):
         cols = list(tablo.columns)
         # Tabloyu tersten (yeni tarih üstte) göster
         tablo_display = tablo.iloc[::-1].reset_index(drop=True)
+        tablo_mum_sayisi = len(tablo_display)  # Her coin için tablo uzunluğunu güncelle (en son coin için geçerli olur)
         tree = ttk.Treeview(frame, columns=cols, show='headings')
         for col in cols:
             tree.heading(col, text=col)
@@ -370,6 +372,9 @@ def show_tables_in_tabs(symbols):
     progress_label.config(text="Yükleme tamamlandı.")
     progress_bar.pack_forget()
     progress_label.pack_forget()
+
+    # Başlığı güncelle
+    root.title(f"Kripto Son {tablo_mum_sayisi} Mum Sinyalleri v{APP_VERSION}")
 
     root.mainloop()
 
