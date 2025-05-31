@@ -102,9 +102,46 @@ def prepare_table_data(symbol):
     # Grafik için son 100 mumu döndür
     return tablo, df.iloc[-100:] if len(df) >= 100 else df
 
+def manage_coins_window(parent, symbols, update_callback):
+    win = tk.Toplevel(parent)
+    win.title("Coin Çiftlerini Yönet")
+    win.geometry("350x350")
+    win.resizable(False, False)
+
+    tk.Label(win, text="coinler.txt içeriği (her satıra bir coin çifti):").pack(pady=5)
+    text = tk.Text(win, width=30, height=12)
+    text.pack(padx=10)
+    text.insert('1.0', "\n".join(symbols))
+
+    def save_and_close():
+        new_symbols = [line.strip() for line in text.get('1.0', 'end').splitlines() if line.strip()]
+        with open('coinler.txt', 'w', encoding='utf-8') as f:
+            for sym in new_symbols:
+                f.write(sym + '\n')
+        update_callback(new_symbols)
+        win.destroy()
+
+    btn_frame = tk.Frame(win)
+    btn_frame.pack(pady=10)
+    tk.Button(btn_frame, text="Kaydet ve Kapat", command=save_and_close).pack(side='left', padx=5)
+    tk.Button(btn_frame, text="Vazgeç", command=win.destroy).pack(side='left', padx=5)
+
 def show_tables_in_tabs(symbols):
     root = tk.Tk()
     root.title("Kripto Son 5 Mum Sinyalleri")
+
+    # Menü çubuğu ve coin yönetim ekranı
+    def reload_and_refresh(new_symbols=None):
+        root.destroy()
+        # Uygulamayı yeniden başlat
+        import sys, os
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+    menubar = tk.Menu(root)
+    coin_menu = tk.Menu(menubar, tearoff=0)
+    coin_menu.add_command(label="Coin Çiftlerini Yönet", command=lambda: manage_coins_window(root, symbols, reload_and_refresh))
+    menubar.add_cascade(label="Ayarlar", menu=coin_menu)
+    root.config(menu=menubar)
 
     # Progress bar ekle
     progress = tk.DoubleVar()
