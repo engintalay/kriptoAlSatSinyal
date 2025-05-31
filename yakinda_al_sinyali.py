@@ -57,7 +57,8 @@ def load_symbols(filepath='coinler.txt'):
 
 def prepare_table_data(symbol):
     try:
-        df = get_klines(symbol=symbol)
+        # Bollinger için en az 44 veri (20 pencere + 24 mum) yükle
+        df = get_klines(symbol=symbol, limit=44)
     except Exception as e:
         # API hatası varsa boş tablo döndür
         tablo = pd.DataFrame([{
@@ -99,8 +100,8 @@ def prepare_table_data(symbol):
         'high': 'HIGH',
         'MEAN': 'MEAN'
     })
-    # Grafik için son 100 mumu döndür
-    return tablo, df.iloc[-100:] if len(df) >= 100 else df
+    # Grafik için son 100 mumu döndür (en fazla 44 veri olabilir)
+    return tablo, df.iloc[-44:] if len(df) >= 44 else df
 
 def manage_coins_window(parent, symbols, update_callback):
     win = tk.Toplevel(parent)
@@ -179,20 +180,23 @@ def show_tables_in_tabs(symbols):
         tree.pack(fill='x', expand=False)
 
         # Mum grafik (candlestick) ekle
+        canvas = None
+        fig = None
+        ax = None
         if df_graph is not None and not df_graph.empty and 'datetime' in df_graph:
             import matplotlib.dates as mdates
             from matplotlib.patches import Rectangle
 
-            fig, ax = plt.subplots(figsize=(10, 3))
-            # Son 24 mum için
             df_candle = df_graph.iloc[-24:]
+            bollinger_df = df_graph
+
+            fig, ax = plt.subplots(figsize=(10, 3))
             x = df_candle['datetime']
             opens = df_candle['open']
             closes = df_candle['close']
             highs = df_candle['high']
             lows = df_candle['low']
 
-            # X eksenini saat olarak ayarla
             saatler = df_candle['datetime'].dt.strftime('%H:%M').tolist()
             ax.set_xticks(list(range(len(saatler))))
             ax.set_xticklabels(saatler, rotation=45)
@@ -200,11 +204,9 @@ def show_tables_in_tabs(symbols):
             width = 0.6
             for i in range(len(df_candle)):
                 color = 'green' if closes.iloc[i] >= opens.iloc[i] else 'red'
-                # Gövde
                 ax.add_patch(Rectangle((i - width/2, min(opens.iloc[i], closes.iloc[i])),
                                        width, abs(opens.iloc[i] - closes.iloc[i]),
                                        color=color, alpha=0.7))
-                # Fitil
                 ax.plot([i, i], [lows.iloc[i], highs.iloc[i]], color='black', linewidth=1)
 
             ax.set_xlim(-1, len(df_candle))
@@ -214,8 +216,69 @@ def show_tables_in_tabs(symbols):
             fig.tight_layout()
             canvas = FigureCanvasTkAgg(fig, master=frame)
             canvas.draw()
-            canvas.get_tk_widget().pack(fill='both', expand=True)
+            canvas_widget = canvas.get_tk_widget()
+            canvas_widget.pack(fill='both', expand=True)
             plt.close(fig)
+
+        # Bollinger Bandı ve MA20 göster/gizle düğmesi
+        def toggle_bollinger(ax=ax, fig=fig, canvas=canvas, df_candle=bollinger_df if df_graph is not None and not df_graph.empty else None):
+            if ax is None or fig is None or canvas is None or df_candle is None or df_candle.empty:
+                return
+            # Önce eski Bollinger ve MA çizgilerini temizle
+            for line in ax.get_lines():
+                if hasattr(line, '_is_bollinger') and line._is_bollinger:
+                    line.remove()
+            for txt in getattr(ax, '_bollinger_texts', []):
+                txt.remove()
+            ax._bollinger_texts = []
+
+            # Eğer zaten gösteriliyorsa tekrar çizme (toggle)
+            if hasattr(ax, '_bollinger_visible') and ax._bollinger_visible:
+                ax._bollinger_visible = False
+                canvas.draw()
+                return
+
+            close = df_candle['close']
+            window = 20 if len(close) >= 20 else len(close)
+            if window < 2:
+                return
+            ma = close.rolling(window=window).mean()
+            std = close.rolling(window=window).std()
+            upper = ma + 2 * std
+            lower = ma - 2 * std
+            # Sadece son 24 mumun Bollinger ve MA20'sini çiz
+            upper_last = upper.iloc[-24:]
+            lower_last = lower.iloc[-24:]
+            ma_last = ma.iloc[-24:]
+            idxs = list(range(len(upper_last)))
+            ln1, = ax.plot(idxs, upper_last, color='orange', linestyle='--', label='Bollinger Üst')
+            ln2, = ax.plot(idxs, lower_last, color='purple', linestyle='--', label='Bollinger Alt')
+            ln3, = ax.plot(idxs, ma_last, color='black', linestyle='-', label='MA20')
+            ln1._is_bollinger = True
+            ln2._is_bollinger = True
+            ln3._is_bollinger = True
+
+            # Saat ile kesişim noktalarındaki değerleri göster
+            ax._bollinger_texts = []
+            for i in idxs:
+                saat = saatler[i]
+                val_ma = ma_last.iloc[i]
+                val_up = upper_last.iloc[i]
+                val_lo = lower_last.iloc[i]
+                # MA20
+                txt_ma = ax.text(i, val_ma, f"{val_ma:.2f}", color='black', fontsize=7, ha='center', va='bottom', rotation=90)
+                # Üst ve alt band
+                txt_up = ax.text(i, val_up, f"{val_up:.2f}", color='orange', fontsize=7, ha='center', va='bottom', rotation=90)
+                txt_lo = ax.text(i, val_lo, f"{val_lo:.2f}", color='purple', fontsize=7, ha='center', va='top', rotation=90)
+                ax._bollinger_texts.extend([txt_ma, txt_up, txt_lo])
+
+            ax._bollinger_visible = True
+            ax.legend()
+            canvas.draw()
+
+        if canvas is not None:
+            btn = tk.Button(frame, text="Bollinger Bandı ve MA20 Göster/Gizle", command=toggle_bollinger)
+            btn.pack(pady=5)
 
         # Progress bar güncelle
         percent = int((idx / total) * 100)
