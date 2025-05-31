@@ -1,6 +1,10 @@
 import requests
 import pandas as pd
 import ta
+import tkinter as tk
+from tkinter import ttk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def get_klines(symbol='BTC-USDT', interval='1hour', limit=100):
     url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol}&limit={limit}"
@@ -51,54 +55,143 @@ def load_symbols(filepath='coinler.txt'):
         symbols = [line.strip() for line in f if line.strip()]
     return symbols
 
-def check_recent_buy_signal(symbol='BTC-USDT'):
-    df = get_klines(symbol=symbol)
-    
-    # RSI ve MACD
+def prepare_table_data(symbol):
+    try:
+        df = get_klines(symbol=symbol)
+    except Exception as e:
+        # API hatası varsa boş tablo döndür
+        tablo = pd.DataFrame([{
+            'datetime': '',
+            'OPEN': '',
+            'CLOSE': '',
+            'LOW': '',
+            'HIGH': '',
+            'MEAN': '',
+            'RSI': '',
+            'MACD': '',
+            'MACD_signal': '',
+            'SUPERTREND': '❌',
+            'SIGNAL': '❌'
+        }])
+        tablo.columns = ['datetime', 'OPEN', 'CLOSE', 'LOW', 'HIGH', 'MEAN', 'RSI', 'MACD', 'MACD_signal', 'SUPERTREND', 'SIGNAL']
+        tablo.iloc[0, 0] = f"{symbol} için veri yok"
+        return tablo, None
     rsi = ta.momentum.RSIIndicator(close=df['close'], window=14)
     macd = ta.trend.MACD(close=df['close'])
     df['RSI'] = rsi.rsi()
     df['MACD'] = macd.macd()
     df['MACD_signal'] = macd.macd_signal()
-    
-    # Supertrend hesapla (TradingView ayarları: ATR period=22, multiplier=3)
     df = calculate_supertrend(df, atr_period=22, multiplier=3)
-
     df = df.dropna()
     df['signal'] = df.apply(generate_signal, axis=1)
-
-    # Zaman bilgisini ekle ve yerel saat (Europe/Istanbul) olarak ayarla
     df['datetime'] = pd.to_datetime(df['time'].astype(int), unit='s', utc=True).dt.tz_convert('Europe/Istanbul')
-
-    # SUPERTREND'i sembole çevir
     df['SUPERTREND_SYMBOL'] = df['SUPERTREND'].map({True: '🟢', False: '🔴'})
-    # Sinyali sembole çevir
     signal_map = {'AL': '🟢', 'SAT': '🔴', 'BEKLE': '⚪'}
     df['SIGNAL_SYMBOL'] = df['signal'].map(signal_map)
-
-    # Ortalama değeri ekle
     df['MEAN'] = (df['open'] + df['close'] + df['low'] + df['high']) / 4
+    tablo = df[['datetime', 'open', 'close', 'low', 'high', 'MEAN', 'RSI', 'MACD', 'MACD_signal', 'SUPERTREND_SYMBOL', 'SIGNAL_SYMBOL']].iloc[-24:]
+    tablo = tablo.rename(columns={
+        'SUPERTREND_SYMBOL': 'SUPERTREND',
+        'SIGNAL_SYMBOL': 'SIGNAL',
+        'open': 'OPEN',
+        'close': 'CLOSE',
+        'low': 'LOW',
+        'high': 'HIGH',
+        'MEAN': 'MEAN'
+    })
+    # Grafik için son 100 mumu döndür
+    return tablo, df.iloc[-100:] if len(df) >= 100 else df
 
-    recent_signals = df['signal'].iloc[-5:]
-    print(f"\n{symbol} için son 5 mum sinyali:")
-    print(df[['datetime', 'open', 'close', 'low', 'high', 'MEAN', 'RSI', 'MACD', 'MACD_signal', 'SUPERTREND_SYMBOL', 'SIGNAL_SYMBOL']]
-            .iloc[-5:]
-            .rename(columns={
-                'SUPERTREND_SYMBOL': 'SUPERTREND',
-                'SIGNAL_SYMBOL': 'SIGNAL',
-                'open': 'OPEN',
-                'close': 'CLOSE',
-                'low': 'LOW',
-                'high': 'HIGH',
-                'MEAN': 'MEAN'
-            })
-            .to_string(index=True))
-    if 'AL' in recent_signals.values:
-        print(f"✅ {symbol} için yakın zamanda AL sinyali üretildi.")
-    else:
-        print(f"❌ {symbol} için yakın zamanda AL sinyali yok.")
+def show_tables_in_tabs(symbols):
+    root = tk.Tk()
+    root.title("Kripto Son 5 Mum Sinyalleri")
+
+    # Progress bar ekle
+    progress = tk.DoubleVar()
+    progress_bar = ttk.Progressbar(root, variable=progress, maximum=100)
+    progress_bar.pack(fill='x', padx=10, pady=5)
+    progress_label = tk.Label(root, text="Yükleniyor... %0")
+    progress_label.pack()
+
+    notebook = ttk.Notebook(root)
+    notebook.pack(fill='both', expand=True)
+
+    style = ttk.Style()
+    style.theme_use("default")
+    style.map("Treeview", background=[('selected', '#ececec')])
+
+    total = len(symbols)
+    for idx, symbol in enumerate(symbols, 1):
+        frame = ttk.Frame(notebook)
+        notebook.add(frame, text=symbol)
+        tablo, df_graph = prepare_table_data(symbol)
+        cols = list(tablo.columns)
+        tree = ttk.Treeview(frame, columns=cols, show='headings')
+        for col in cols:
+            tree.heading(col, text=col)
+            tree.column(col, width=120, anchor='center')
+        tree.tag_configure('supertrend_green', background='#d4fcdc')
+        tree.tag_configure('supertrend_red', background='#ffd6d6')
+        for _, row in tablo.iterrows():
+            tags = ()
+            if row['SUPERTREND'] == '🟢':
+                tags = ('supertrend_green',)
+            elif row['SUPERTREND'] == '🔴':
+                tags = ('supertrend_red',)
+            tree.insert('', 'end', values=[row[col] for col in cols], tags=tags)
+        tree.pack(fill='x', expand=False)
+
+        # Mum grafik (candlestick) ekle
+        if df_graph is not None and not df_graph.empty and 'datetime' in df_graph:
+            import matplotlib.dates as mdates
+            from matplotlib.patches import Rectangle
+
+            fig, ax = plt.subplots(figsize=(10, 3))
+            # Son 24 mum için
+            df_candle = df_graph.iloc[-24:]
+            x = df_candle['datetime']
+            opens = df_candle['open']
+            closes = df_candle['close']
+            highs = df_candle['high']
+            lows = df_candle['low']
+
+            # X eksenini saat olarak ayarla
+            saatler = df_candle['datetime'].dt.strftime('%H:%M').tolist()
+            ax.set_xticks(list(range(len(saatler))))
+            ax.set_xticklabels(saatler, rotation=45)
+
+            width = 0.6
+            for i in range(len(df_candle)):
+                color = 'green' if closes.iloc[i] >= opens.iloc[i] else 'red'
+                # Gövde
+                ax.add_patch(Rectangle((i - width/2, min(opens.iloc[i], closes.iloc[i])),
+                                       width, abs(opens.iloc[i] - closes.iloc[i]),
+                                       color=color, alpha=0.7))
+                # Fitil
+                ax.plot([i, i], [lows.iloc[i], highs.iloc[i]], color='black', linewidth=1)
+
+            ax.set_xlim(-1, len(df_candle))
+            ax.set_title(f"{symbol} Son 24 Mum (Saatlik) Candlestick")
+            ax.set_ylabel("Fiyat")
+            ax.grid(True, axis='y')
+            fig.tight_layout()
+            canvas = FigureCanvasTkAgg(fig, master=frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill='both', expand=True)
+            plt.close(fig)
+
+        # Progress bar güncelle
+        percent = int((idx / total) * 100)
+        progress.set(percent)
+        progress_label.config(text=f"Yükleniyor... %{percent}")
+        root.update_idletasks()
+
+    progress_label.config(text="Yükleme tamamlandı.")
+    progress_bar.pack_forget()
+    progress_label.pack_forget()
+
+    root.mainloop()
 
 if __name__ == "__main__":
     symbols = load_symbols()
-    for symbol in symbols:
-        check_recent_buy_signal(symbol)
+    show_tables_in_tabs(symbols)
