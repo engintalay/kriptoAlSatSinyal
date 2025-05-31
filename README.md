@@ -1,12 +1,12 @@
-# kriptoAlSatSinyal v1.0.2
+# kriptoAlSatSinyal v1.0.3
 
 ## Overview
 This project generates trading signals for multiple cryptocurrencies using technical indicators such as RSI, MACD, and SuperTrend. It supports both command-line and graphical (tabbed) viewing of recent signals and candlestick data. You can also manage the list of coin pairs and time interval from within the graphical application.
 
 ## Files
 - **sinyalUretici.py**: Main logic for fetching market data, calculating indicators, and generating trading signals for multiple coins. Uses `ayarlar.json` for interval/timeframe.
-- **yakinda_al_sinyali.py**: Shows the last 24 candles' indicator values and signals for all coins in a tabbed GUI, with candlestick charts, Bollinger Bands/MA20, coin pair management, and interval settings.
-- **kucoin_populer_usdt_ekle.py**: Adds the most popular USDT pairs from KuCoin to `coinler.txt` (asks how many, avoids duplicates, only adds new).
+- **yakinda_al_sinyali.py**: Shows the last 24 candles' indicator values and signals for all coins in a tabbed GUI, with candlestick charts, Bollinger Bands/MA20, coin pair management, and interval settings. The window title displays the number of rows for each coin.
+- **kucoin_populer_usdt_ekle.py**: Adds the most popular USDT pairs from KuCoin to `coinler.txt`. You can choose to append only new coins or completely reset the list.
 - **requirements.txt**: Lists the necessary Python libraries for the project.
 - **install.sh**: Shell script to automate installation on Linux/macOS.
 - **install.bat**: Batch script to automate installation on Windows.
@@ -55,13 +55,15 @@ python yakinda_al_sinyali.py
 - Menüden "Zaman Aralığı" ile mum verisi intervalini seçebilir ve ayarlar.json dosyasına kaydedebilirsiniz.
 - Menüden "Verileri Yenile" ile verileri güncelleyebilirsiniz.
 - Menüden "Hakkında" ile uygulama ve geliştirici hakkında bilgi alabilirsiniz.
+- Uygulama başlığında her coin için tabloya eklenen mum sayısı gösterilir.
 
 ### KuCoin'den En Popüler USDT Coinlerini coinler.txt'ye Ekle:
 ```sh
 python kucoin_populer_usdt_ekle.py
 ```
 - Size kaç adet popüler USDT paritesi eklemek istediğinizi sorar.
-- coinler.txt dosyasına sadece yeni ve benzersiz coinleri ekler, mevcutları silmez.
+- Ayrıca mevcut coinler.txt dosyasını sıfırlamak veya sadece yeni coinleri eklemek isteyip istemediğinizi seçebilirsiniz.
+- coinler.txt dosyasına sadece yeni ve benzersiz coinleri ekler veya tamamen sıfırlar.
 
 ## Ekran Görüntüsü
 
@@ -84,5 +86,5 @@ SOL-USDT
 ## Hakkında
 Bu uygulama, kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.  
 Geliştirici: Engin Talay  
-Sürüm: v1.0.2  
+Sürüm: v1.0.3  
 Lisans: MIT

@@ -21,12 +21,21 @@ def load_existing_coins(filepath="coinler.txt"):
     except FileNotFoundError:
         return set()
 
-def save_coins(filepath, coins):
-    with open(filepath, "a", encoding="utf-8") as f:
+def save_coins(filepath, coins, overwrite=False):
+    mode = "w" if overwrite else "a"
+    with open(filepath, mode, encoding="utf-8") as f:
         for coin in coins:
             f.write(coin + "\n")
 
 def main():
+    print("Popüler USDT coin listesini güncellemek için iki seçenek:")
+    print("1) Sadece yeni coinleri mevcut coinler.txt dosyasına ekle (var olanları silmez)")
+    print("2) coinler.txt dosyasını sıfırla ve sadece seçtiğiniz popüler coinleri ekle (tüm eski coinler silinir)")
+    secim = input("Seçiminiz (1/2): ").strip()
+    if secim not in ("1", "2"):
+        print("Geçersiz seçim.")
+        return
+
     try:
         n = int(input("Kaç adet en popüler USDT paritesi eklemek istersiniz? (örn: 10): ").strip())
     except Exception:
@@ -34,17 +43,22 @@ def main():
         return
 
     populer_coins = fetch_popular_usdt_pairs(n)
-    mevcut_coins = load_existing_coins()
-    yeni_eklenecekler = [coin for coin in populer_coins if coin not in mevcut_coins]
 
-    if not yeni_eklenecekler:
-        print("Eklenebilecek yeni coin yok. coinler.txt zaten güncel.")
-        return
-
-    save_coins("coinler.txt", yeni_eklenecekler)
-    print(f"{len(yeni_eklenecekler)} yeni coin eklendi:")
-    for coin in yeni_eklenecekler:
-        print("-", coin)
+    if secim == "2":
+        save_coins("coinler.txt", populer_coins, overwrite=True)
+        print(f"coinler.txt sıfırlandı ve {len(populer_coins)} coin eklendi:")
+        for coin in populer_coins:
+            print("-", coin)
+    else:
+        mevcut_coins = load_existing_coins()
+        yeni_eklenecekler = [coin for coin in populer_coins if coin not in mevcut_coins]
+        if not yeni_eklenecekler:
+            print("Eklenebilecek yeni coin yok. coinler.txt zaten güncel.")
+            return
+        save_coins("coinler.txt", yeni_eklenecekler, overwrite=False)
+        print(f"{len(yeni_eklenecekler)} yeni coin eklendi:")
+        for coin in yeni_eklenecekler:
+            print("-", coin)
 
 if __name__ == "__main__":
     main()

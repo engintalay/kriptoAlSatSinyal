@@ -8,7 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import json
 import os
 
-APP_VERSION = "1.0.2"
+APP_VERSION = "1.0.3"
 DEFAULT_INTERVAL = "1hour"
 SETTINGS_FILE = "ayarlar.json"
 
@@ -188,8 +188,12 @@ def show_about_window(parent):
     tk.Button(about, text="Kapat", command=about.destroy).pack(pady=10)
 
 def show_tables_in_tabs(symbols):
+    tablo_mum_sayilari = []  # tablo_mum_sayilari değişkenini başta tanımla
     root = tk.Tk()
-    root.title(f"Kripto Son 5 Mum Sinyalleri v{APP_VERSION}")
+    # Başlık: Her coin için tablo uzunluklarını göster
+    tablo_mum_sayilari_str = 24
+    root.title(f"Kripto Sinyalleri ({tablo_mum_sayilari_str} mum) v{APP_VERSION}")
+    #root.title(f"Kripto Son 5 Mum Sinyalleri v{APP_VERSION}")
 
     # Ayarları yükle
     settings = load_settings()
@@ -235,8 +239,10 @@ def show_tables_in_tabs(symbols):
     style.theme_use("default")
     style.map("Treeview", background=[('selected', '#ececec')])
 
+    # tablo_mum_sayilari değişkenini başta tanımla
+    tablo_mum_sayilari = []
+
     total = len(symbols)
-    tablo_mum_sayisi = 24  # Varsayılan tablo mum sayısı
     for idx, symbol in enumerate(symbols, 1):
         frame = ttk.Frame(notebook)
         notebook.add(frame, text=symbol)
@@ -244,7 +250,7 @@ def show_tables_in_tabs(symbols):
         cols = list(tablo.columns)
         # Tabloyu tersten (yeni tarih üstte) göster
         tablo_display = tablo.iloc[::-1].reset_index(drop=True)
-        tablo_mum_sayisi = len(tablo_display)  # Her coin için tablo uzunluğunu güncelle (en son coin için geçerli olur)
+        tablo_mum_sayilari.append(len(tablo_display))
         tree = ttk.Treeview(frame, columns=cols, show='headings')
         for col in cols:
             tree.heading(col, text=col)
@@ -373,8 +379,9 @@ def show_tables_in_tabs(symbols):
     progress_bar.pack_forget()
     progress_label.pack_forget()
 
-    # Başlığı güncelle
-    root.title(f"Kripto Son {tablo_mum_sayisi} Mum Sinyalleri v{APP_VERSION}")
+    # Başlık: Her coin için tablo uzunluklarını göster
+ #   tablo_mum_sayilari_str = ", ".join([f"{sym}: {count} mum" for sym, count in zip(symbols, tablo_mum_sayilari)])
+ #   root.title(f"Kripto Sinyalleri ({tablo_mum_sayilari_str} mum) v{APP_VERSION}")
 
     root.mainloop()
 
