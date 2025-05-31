@@ -6,6 +6,8 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+APP_VERSION = "1.0.1"
+
 def get_klines(symbol='BTC-USDT', interval='1hour', limit=100):
     url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol}&limit={limit}"
     response = requests.get(url)
@@ -133,7 +135,7 @@ def show_about_window(parent):
     about.geometry("350x180")
     about.resizable(False, False)
     msg = (
-        "kriptoAlSatSinyal v1.0\n\n"
+        f"kriptoAlSatSinyal v{APP_VERSION}\n\n"
         "Kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.\n"
         "Geliştirici: Engin Talay\n"
         "Lisans: MIT\n"
@@ -144,7 +146,7 @@ def show_about_window(parent):
 
 def show_tables_in_tabs(symbols):
     root = tk.Tk()
-    root.title("Kripto Son 5 Mum Sinyalleri v1.0")
+    root.title(f"Kripto Son 5 Mum Sinyalleri v{APP_VERSION}")
 
     # Menü çubuğu ve coin yönetim ekranı
     def reload_and_refresh(new_symbols=None):
@@ -185,13 +187,15 @@ def show_tables_in_tabs(symbols):
         notebook.add(frame, text=symbol)
         tablo, df_graph = prepare_table_data(symbol)
         cols = list(tablo.columns)
+        # Tabloyu tersten (yeni tarih üstte) göster
+        tablo_display = tablo.iloc[::-1].reset_index(drop=True)
         tree = ttk.Treeview(frame, columns=cols, show='headings')
         for col in cols:
             tree.heading(col, text=col)
             tree.column(col, width=120, anchor='center')
         tree.tag_configure('supertrend_green', background='#d4fcdc')
         tree.tag_configure('supertrend_red', background='#ffd6d6')
-        for _, row in tablo.iterrows():
+        for _, row in tablo_display.iterrows():
             tags = ()
             if row['SUPERTREND'] == '🟢':
                 tags = ('supertrend_green',)
