@@ -5,10 +5,27 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import json
+import os
 
 APP_VERSION = "1.0.1"
+DEFAULT_INTERVAL = "1hour"
+SETTINGS_FILE = "ayarlar.json"
 
-def get_klines(symbol='BTC-USDT', interval='1hour', limit=100):
+def load_settings():
+    if os.path.exists(SETTINGS_FILE):
+        with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except Exception:
+                return {}
+    return {}
+
+def save_settings(settings):
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(settings, f, ensure_ascii=False, indent=2)
+
+def get_klines(symbol='BTC-USDT', interval=DEFAULT_INTERVAL, limit=100):
     url = f"https://api.kucoin.com/api/v1/market/candles?type={interval}&symbol={symbol}&limit={limit}"
     response = requests.get(url)
     data = response.json()
@@ -57,10 +74,10 @@ def load_symbols(filepath='coinler.txt'):
         symbols = [line.strip() for line in f if line.strip()]
     return symbols
 
-def prepare_table_data(symbol):
+def prepare_table_data(symbol, interval):
     try:
         # Bollinger için en az 44 veri (20 pencere + 24 mum) yükle
-        df = get_klines(symbol=symbol, limit=44)
+        df = get_klines(symbol=symbol, interval=interval, limit=44)
     except Exception as e:
         # API hatası varsa boş tablo döndür
         tablo = pd.DataFrame([{
@@ -129,6 +146,31 @@ def manage_coins_window(parent, symbols, update_callback):
     tk.Button(btn_frame, text="Kaydet ve Kapat", command=save_and_close).pack(side='left', padx=5)
     tk.Button(btn_frame, text="Vazgeç", command=win.destroy).pack(side='left', padx=5)
 
+def manage_settings_window(parent, interval_var, update_callback):
+    win = tk.Toplevel(parent)
+    win.title("Ayarlar")
+    win.geometry("300x150")
+    win.resizable(False, False)
+
+    tk.Label(win, text="Zaman Aralığı (interval):").pack(pady=10)
+    interval_entry = ttk.Combobox(win, values=[
+        "1min", "3min", "5min", "15min", "30min", "1hour", "2hour", "4hour", "6hour", "8hour", "12hour", "1day"
+    ], state="readonly")
+    interval_entry.set(interval_var.get())
+    interval_entry.pack()
+
+    def save_and_close():
+        interval_var.set(interval_entry.get())
+        # Ayarları dosyaya kaydet
+        save_settings({"interval": interval_var.get()})
+        update_callback()
+        win.destroy()
+
+    btn_frame = tk.Frame(win)
+    btn_frame.pack(pady=15)
+    tk.Button(btn_frame, text="Kaydet ve Kapat", command=save_and_close).pack(side='left', padx=5)
+    tk.Button(btn_frame, text="Vazgeç", command=win.destroy).pack(side='left', padx=5)
+
 def show_about_window(parent):
     about = tk.Toplevel(parent)
     about.title("Hakkında")
@@ -148,6 +190,11 @@ def show_tables_in_tabs(symbols):
     root = tk.Tk()
     root.title(f"Kripto Son 5 Mum Sinyalleri v{APP_VERSION}")
 
+    # Ayarları yükle
+    settings = load_settings()
+    interval_val = settings.get("interval", DEFAULT_INTERVAL)
+    interval_var = tk.StringVar(value=interval_val)
+
     # Menü çubuğu ve coin yönetim ekranı
     def reload_and_refresh(new_symbols=None):
         root.destroy()
@@ -159,10 +206,16 @@ def show_tables_in_tabs(symbols):
         import sys, os
         os.execl(sys.executable, sys.executable, *sys.argv)
 
+    def update_interval_and_refresh():
+        root.destroy()
+        import sys, os
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
     menubar = tk.Menu(root)
     coin_menu = tk.Menu(menubar, tearoff=0)
     coin_menu.add_command(label="Coin Çiftlerini Yönet", command=lambda: manage_coins_window(root, symbols, reload_and_refresh))
     menubar.add_cascade(label="Ayarlar", menu=coin_menu)
+    menubar.add_command(label="Zaman Aralığı", command=lambda: manage_settings_window(root, interval_var, update_interval_and_refresh))
     menubar.add_command(label="Verileri Yenile", command=refresh_data)
     menubar.add_command(label="Hakkında", command=lambda: show_about_window(root))
     root.config(menu=menubar)
@@ -185,7 +238,7 @@ def show_tables_in_tabs(symbols):
     for idx, symbol in enumerate(symbols, 1):
         frame = ttk.Frame(notebook)
         notebook.add(frame, text=symbol)
-        tablo, df_graph = prepare_table_data(symbol)
+        tablo, df_graph = prepare_table_data(symbol, interval_var.get())
         cols = list(tablo.columns)
         # Tabloyu tersten (yeni tarih üstte) göster
         tablo_display = tablo.iloc[::-1].reset_index(drop=True)
@@ -215,16 +268,17 @@ def show_tables_in_tabs(symbols):
             df_candle = df_graph.iloc[-24:]
             bollinger_df = df_graph
 
-            fig, ax = plt.subplots(figsize=(10, 3))
+            fig, ax = plt.subplots(figsize=(12, 4))
             x = df_candle['datetime']
             opens = df_candle['open']
             closes = df_candle['close']
             highs = df_candle['high']
             lows = df_candle['low']
 
-            saatler = df_candle['datetime'].dt.strftime('%H:%M').tolist()
-            ax.set_xticks(list(range(len(saatler))))
-            ax.set_xticklabels(saatler, rotation=45)
+            # Saat ve tarih bilgisini birleştir
+            zamanlar = df_candle['datetime'].dt.strftime('%Y-%m-%d %H:%M').tolist()
+            ax.set_xticks(list(range(len(zamanlar))))
+            ax.set_xticklabels(zamanlar, rotation=45, fontsize=8)
 
             width = 0.6
             for i in range(len(df_candle)):
