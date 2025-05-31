@@ -45,7 +45,7 @@ python sinyalUretici.py
 python yakinda_al_sinyali.py
 ```
 - Her coin için son 24 saatlik mum, teknik göstergeler ve sinyal tablosu sekmelerde gösterilir.
-- Her sekmede ayrıca son 24 mum için candlestick grafik yer alır.
+- Her sekmede ayrıca son 24 mum için candlestick grafik ve Bollinger Bantları/MA20 (düğme ile açılıp kapatılabilir) yer alır.
 - Yükleme sırasında ilerleme çubuğu gösterilir.
 - Menüden "Ayarlar > Coin Çiftlerini Yönet" ile coinler.txt dosyasını uygulama içinden düzenleyebilirsiniz.
 
