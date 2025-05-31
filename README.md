@@ -1,28 +1,61 @@
 # kriptoAlSatSinyal
 
 ## Overview
-This project is designed to generate trading signals based on market data for cryptocurrencies. It utilizes technical indicators such as the Relative Strength Index (RSI) and the Moving Average Convergence Divergence (MACD) to determine optimal buy and sell points.
+This project generates trading signals for multiple cryptocurrencies using technical indicators such as RSI, MACD, and SuperTrend. It supports both command-line and graphical (tabbed) viewing of recent signals and candlestick data.
 
 ## Files
-- **sinyalUretici.py**: Contains the main logic for fetching market data, calculating indicators, and generating trading signals.
+- **sinyalUretici.py**: Main logic for fetching market data, calculating indicators, and generating trading signals for multiple coins.
+- **yakinda_al_sinyali.py**: Shows the last 24 candles' indicator values and signals for all coins in a tabbed GUI, with candlestick charts.
 - **requirements.txt**: Lists the necessary Python libraries for the project.
-- **install.sh**: A shell script to automate the installation of required packages.
+- **install.sh**: Shell script to automate installation on Linux/macOS.
+- **install.bat**: Batch script to automate installation on Windows.
+- **run.sh**: Shell script to run the main signal generator.
+- **run.bat**: Batch script to run the main signal generator on Windows.
+- **coinler.txt**: List of coin pairs to monitor (one per line).
 
 ## Installation Instructions
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd kriptoAlSatSinyal
-   ```
 
-2. Run the installation script:
-   ```
-   bash install.sh
-   ```
+### 1. Clone the repository:
+```sh
+git clone <repository-url>
+cd kriptoAlSatSinyal
+```
+
+### 2. Install dependencies
+
+#### Linux/macOS:
+```sh
+bash install.sh
+```
+
+#### Windows:
+```bat
+install.bat
+```
 
 ## Usage
-After installation, you can run the signal generator by executing:
-```
+
+### Terminal Sinyal Üretici (Tüm coinler için):
+```sh
 python sinyalUretici.py
 ```
-The script will continuously fetch market data and print trading signals based on the calculated indicators.
+
+### Grafiksel Tablo ve Mum Grafiği (Tüm coinler için):
+```sh
+python yakinda_al_sinyali.py
+```
+- Her coin için son 24 saatlik mum, teknik göstergeler ve sinyal tablosu sekmelerde gösterilir.
+- Her sekmede ayrıca son 24 mum için candlestick grafik yer alır.
+- Yükleme sırasında ilerleme çubuğu gösterilir.
+
+## coinler.txt Örneği
+```
+BTC-USDT
+ETH-USDT
+SOL-USDT
+```
+
+## Notlar
+- Tüm coin çiftleri KuCoin borsasında desteklenmelidir.
+- `requirements.txt` dosyasındaki tüm paketler kurulmalıdır.
+- Grafiksel arayüz için `tkinter` ve `matplotlib` gereklidir.
