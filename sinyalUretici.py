@@ -48,9 +48,9 @@ def generate_signals(df):
         return 'BEKLE'
 
 def load_symbols(filepath='coinler.txt'):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        symbols = [line.strip() for line in f if line.strip()]
-    return symbols
+    # Bu fonksiyon tablohazirla.py'den import edilmeli, burada tekrar bulunmamalı.
+    from tablohazirla import load_symbols
+    return load_symbols(filepath)
 
 def load_interval():
     settings = load_settings()

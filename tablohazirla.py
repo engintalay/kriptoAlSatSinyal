@@ -9,7 +9,6 @@ import json
 import os
 from grafikler import draw_candlestick, draw_macd, toggle_bollinger
 from gui_coinler import manage_coins_window
-from tablohazirla import prepare_table_data, fetch_popular_usdt_pairs
 
 APP_VERSION = "1.0.3"
 DEFAULT_INTERVAL = "1hour"
@@ -72,6 +71,9 @@ def generate_signal(row):
     else:
         return 'BEKLE'
 
+# load_symbols, prepare_table_data, fetch_popular_usdt_pairs fonksiyonlarının sadece burada olması yeterli.
+# Eğer başka dosyalarda da varsa, sadece burada tutun ve diğer dosyalardan import edin.
+
 def load_symbols(filepath='coinler.txt'):
     with open(filepath, 'r', encoding='utf-8') as f:
         symbols = [line.strip() for line in f if line.strip()]
@@ -126,6 +128,7 @@ def prepare_table_data(symbol, interval):
     return tablo, df.iloc[-44:] if len(df) >= 44 else df
 
 def fetch_popular_usdt_pairs(top_n=10):
+    import requests
     url = "https://api.kucoin.com/api/v1/market/allTickers"
     resp = requests.get(url)
     data = resp.json()

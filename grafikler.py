@@ -16,3 +16,5 @@ def toggle_bollinger(state):
     # state: dict, içinde ax, fig, canvas, bollinger_visible, saatler, bollinger_df
     # ...bollinger göster/gizle kodu buraya taşınacak...
     pass
+
+# Burada tekrar eden fonksiyon yok, sadece grafik fonksiyonları burada olmalı.
