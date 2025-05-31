@@ -8,7 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import json
 import os
 
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 DEFAULT_INTERVAL = "1hour"
 SETTINGS_FILE = "ayarlar.json"
 
@@ -174,16 +174,17 @@ def manage_settings_window(parent, interval_var, update_callback):
 def show_about_window(parent):
     about = tk.Toplevel(parent)
     about.title("Hakkında")
-    about.geometry("350x180")
+    about.geometry("400x220")
     about.resizable(False, False)
     msg = (
         f"kriptoAlSatSinyal v{APP_VERSION}\n\n"
-        "Kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.\n"
+        "Kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.\n\n"
         "Geliştirici: Engin Talay\n"
         "Lisans: MIT\n"
-        "github.com/engintalay/kriptoAlSatSinyal\n\n"
+        "github.com/engintalay/kriptoAlSatSinyal"
     )
-    tk.Label(about, text=msg, justify="left", padx=10, pady=10).pack()
+    label = tk.Label(about, text=msg, justify="left", padx=10, pady=10, anchor="w", wraplength=380)
+    label.pack(fill="both", expand=True)
     tk.Button(about, text="Kapat", command=about.destroy).pack(pady=10)
 
 def show_tables_in_tabs(symbols):
@@ -261,6 +262,7 @@ def show_tables_in_tabs(symbols):
         canvas = None
         fig = None
         ax = None
+        saatler = None  # <-- saatler değişkenini üst scope'ta tanımla
         if df_graph is not None and not df_graph.empty and 'datetime' in df_graph:
             import matplotlib.dates as mdates
             from matplotlib.patches import Rectangle
@@ -276,9 +278,9 @@ def show_tables_in_tabs(symbols):
             lows = df_candle['low']
 
             # Saat ve tarih bilgisini birleştir
-            zamanlar = df_candle['datetime'].dt.strftime('%Y-%m-%d %H:%M').tolist()
-            ax.set_xticks(list(range(len(zamanlar))))
-            ax.set_xticklabels(zamanlar, rotation=45, fontsize=8)
+            saatler = df_candle['datetime'].dt.strftime('%Y-%m-%d %H:%M').tolist()
+            ax.set_xticks(list(range(len(saatler))))
+            ax.set_xticklabels(saatler, rotation=45, fontsize=8)
 
             width = 0.6
             for i in range(len(df_candle)):
@@ -300,8 +302,8 @@ def show_tables_in_tabs(symbols):
             plt.close(fig)
 
         # Bollinger Bandı ve MA20 göster/gizle düğmesi
-        def toggle_bollinger(ax=ax, fig=fig, canvas=canvas, df_candle=bollinger_df if df_graph is not None and not df_graph.empty else None):
-            if ax is None or fig is None or canvas is None or df_candle is None or df_candle.empty:
+        def toggle_bollinger(ax=ax, fig=fig, canvas=canvas, df_candle=bollinger_df if df_graph is not None and not df_graph.empty else None, saatler=saatler):
+            if ax is None or fig is None or canvas is None or df_candle is None or df_candle.empty or saatler is None:
                 return
             # Önce eski Bollinger ve MA çizgilerini temizle
             for line in ax.get_lines():

@@ -1,4 +1,4 @@
-# kriptoAlSatSinyal v1.0.1
+# kriptoAlSatSinyal v1.0.2
 
 ## Overview
 This project generates trading signals for multiple cryptocurrencies using technical indicators such as RSI, MACD, and SuperTrend. It supports both command-line and graphical (tabbed) viewing of recent signals and candlestick data. You can also manage the list of coin pairs and time interval from within the graphical application.
@@ -6,6 +6,7 @@ This project generates trading signals for multiple cryptocurrencies using techn
 ## Files
 - **sinyalUretici.py**: Main logic for fetching market data, calculating indicators, and generating trading signals for multiple coins. Uses `ayarlar.json` for interval/timeframe.
 - **yakinda_al_sinyali.py**: Shows the last 24 candles' indicator values and signals for all coins in a tabbed GUI, with candlestick charts, Bollinger Bands/MA20, coin pair management, and interval settings.
+- **kucoin_populer_usdt_ekle.py**: Adds the most popular USDT pairs from KuCoin to `coinler.txt` (asks how many, avoids duplicates, only adds new).
 - **requirements.txt**: Lists the necessary Python libraries for the project.
 - **install.sh**: Shell script to automate installation on Linux/macOS.
 - **install.bat**: Batch script to automate installation on Windows.
@@ -55,6 +56,13 @@ python yakinda_al_sinyali.py
 - Menüden "Verileri Yenile" ile verileri güncelleyebilirsiniz.
 - Menüden "Hakkında" ile uygulama ve geliştirici hakkında bilgi alabilirsiniz.
 
+### KuCoin'den En Popüler USDT Coinlerini coinler.txt'ye Ekle:
+```sh
+python kucoin_populer_usdt_ekle.py
+```
+- Size kaç adet popüler USDT paritesi eklemek istediğinizi sorar.
+- coinler.txt dosyasına sadece yeni ve benzersiz coinleri ekler, mevcutları silmez.
+
 ## Ekran Görüntüsü
 
 Aşağıda uygulamanın örnek bir ekran görüntüsü yer almaktadır:
@@ -76,5 +84,5 @@ SOL-USDT
 ## Hakkında
 Bu uygulama, kripto para piyasası için teknik analiz tabanlı sinyal üretimi ve görselleştirme sağlar.  
 Geliştirici: Engin Talay  
-Sürüm: v1.0.1  
+Sürüm: v1.0.2  
 Lisans: MIT
